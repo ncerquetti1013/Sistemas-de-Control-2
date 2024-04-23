@@ -44,9 +44,9 @@ poles = roots(denG);
 % Tamaño de paso y tiempo de simulación
 tR   = log(0.95)/poles(1);    % dinámica rápida
 tint = tR/10;                 % tiempo de integración (10 veces menor)
-tsim = 2e-3                   % no se escoje en función de la dinámica lenta del sistema
-                              % dado que el t_est << que el tiempo de
-                              % cambio de la entrada
+tsim = 2e-3                   % no se escoje en función de la dinámica 
+                              % lenta del sistema dado que el t_est << que 
+                              % el tiempo de cambio de la entrada
 step = tsim/tint;
 t    = linspace(0, tsim, step);
 u    = linspace(0, 0, step);    % vector inicial de entrada (todos 0s)
@@ -68,7 +68,7 @@ for i=1:step-1
  
  %Variables de sistema lineal 
  xp = A*(x-Xop)+B*u(i); % calcula derivadas de las VE
- x = x + xp*tint;         % actualiza el valor de las VE para el próximo
+ x = x + xp*tint;       % actualiza el valor de las VE para el próximo
                         % paso por integración por Euler
  Y = C*x;               % calcula salida
  % Actualización de las variables de interés para los nuevos instantes de
@@ -83,10 +83,11 @@ end
 
 % Gráfico de Il, Vc y Vin
 figure(1)
-subplot(3,1,1);
-plot(t,Il, 'b' );title('Corriente , i_t'); grid on; 
-subplot(3,1,2);
-plot(t,Vcl, 'r' );title('Tensión Capacitor , Vc_t');grid on
-subplot(3,1,3); 
-plot(t,u, 'm' );title('Tensión de Entrada, u_t');grid on
-
+%subplot(4,1,1);
+%plot(t,Il, 'b' );title('Corriente , i'); grid on; 
+%subplot(4,1,2);
+%plot(t,Vcl, 'r' );title('Tensión Capacitor , v_c');grid on
+%subplot(4,1,3); 
+%plot(t,u, 'm' );title('Tensión de Entrada, u');grid on
+%subplot(4,1,4);
+plot(t,y, 'm' );title('Tensión de Salida, v_r');grid on

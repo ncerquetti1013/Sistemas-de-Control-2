@@ -26,14 +26,14 @@ uSignal  = values(1:end,4);
 % Gráficas de datos importados
 % 1) Tensión en el capacitor
 figure(1)
-subplot(3,1,1);
-plot(time,vcSignal, 'b');title('Tension Capacitor , V_t');grid on;hold on; 
+%subplot(3,1,1);
+%plot(time,vcSignal, 'b');title('Tension Capacitor , V_t');grid on;hold on; 
 % 2) Corriente en el circuito
-subplot(3,1,2);
+%subplot(3,1,2);
 plot(time, iSignal, 'b');title('Corriente , I_t');grid on;hold on;
 % 3) Tensión de entrada
-subplot(3,1,3);
-plot(time, uSignal, 'b');title('Tensión de entrada , U_t');grid on;hold on;
+%subplot(3,1,3);
+%plot(time, uSignal, 'b');title('Tensión de entrada , U_t');grid on;hold on;
 
 %%
 % Definición de señal para verificación del método
