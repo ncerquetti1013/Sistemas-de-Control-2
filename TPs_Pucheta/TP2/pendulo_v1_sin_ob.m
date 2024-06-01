@@ -245,9 +245,9 @@ Ba_ = [Bd_; -Cd_(1,:)*Bd_];
 
 % CÁLCULO LQR1 - Trayectoria de 0 a 10 m
 % Definición de matrices Q y R.
-d1 = [.1 .01 .01 .1 0.00001];               % elementos de la diagonal: (delta, delta_p, phi, phi_p, ei)       
+d1 = [0.1 0.2 200 0.02 0.00001];          % elementos de la diagonal: (delta, delta_p, phi, phi_p, ei)       
 Q1 = diag(d1);
-R1 = 2.3e-4;
+R1 = 0.1; 
 
 % Cálculo del controlador
 [Klqr, ~, ~] = dlqr(Aa, Ba, Q1, R1); 
@@ -256,15 +256,14 @@ Ki = -Klqr(5);      % Ganancia para el integrador
 
 % CÁLCULO LQR2 - Trayectoria de 10 a 0
 % Definición de matrices Q y R.
-d2 = [.1 .01 .01 .1 0.00001]; %[0.1 1e-3 1e-3 0.1 0.001];                % elementos de la diagonal: (delta, delta_p, phi, phi_p, ei)       
+d2 = [1 0.2 10 0.002 0.00001];            % elementos de la diagonal: (delta, delta_p, phi, phi_p, ei)       
 Q2 = diag(d2);
-R2 = 0.008;
+R2 = 0.01; 
 
 % Cálculo del controlador
 [Klqr_, ~, ~] = dlqr(Aa_, Ba_, Q2, R2); 
 K_  = Klqr_(1:4);     % Ganancia para los estados originales
 Ki_ = -Klqr_(5);      % Ganancia para el integrador
-
 
 %%
 % PASO VII: DISEÑO DEL OBSERVADOR.
@@ -301,24 +300,24 @@ Co_ = Bd_';
 % Definición de las matrices Qo y Ro
 
 % PARA m
-do = [.01 .01 .01 .0001]; 
-Qo = diag(do); 
-Ro = diag([10000 100000]);
+%do = [.01 .01 .01 .0001]; 
+%Qo = diag(do); 
+%Ro = diag([10000 100000]);
    
 % Cálculo del controlador del sistema dual (m)
-Ko = (dlqr(Ao,Bo,Qo,Ro))';
+%Ko = (dlqr(Ao,Bo,Qo,Ro))';
 
 % PARA m_
 % Las ponderaciones de Q y R para el sistema corespondiente a m_ en
 % principio debieran ser las mismas dado que no hay información que
 % implique que la precisión con las que se conocen los estados ni la
 % incertidumbre de las mediciones de la salida cambie.
-do_ = [.01 .01 .01 .0001]; 
-Qo_ = diag(do_); 
-Ro_ = diag([10000 100000]);
+%do_ = [.01 .01 .01 .0001]; 
+%Qo_ = diag(do_); 
+%Ro_ = diag([10000 100000]);
    
 % Cálculo del controlador del sistema dual (m_)
-Ko_ = (dlqr(Ao_,Bo_,Qo_,Ro_))';
+%Ko_ = (dlqr(Ao_,Bo_,Qo_,Ro_))';
    
 %----------------------------------------|   
 % REVISAR Y AJUSTAR VALORES DE OBSERVADOR|
