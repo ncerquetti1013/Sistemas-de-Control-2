@@ -24,7 +24,7 @@
 %   es el máximo valor admisible de ésa no linealidad.
 
 %%
-close all; clear all; %clc;
+close all; clear all; clc;
 
 %%
 % PASO I: DEFINICIÓN DEL MODELO DE ESTADOS PARA EL SISTEMA CONTINUO.
@@ -245,9 +245,9 @@ Ba_ = [Bd_; -Cd_(1,:)*Bd_];
 
 % CÁLCULO LQR1 - Trayectoria de 0 a 10 m
 % Definición de matrices Q y R.
-d1 = [0.1 0.2 200 0.02 0.00001];          % elementos de la diagonal: (delta, delta_p, phi, phi_p, ei)       
+d1 = [1 50 500 .1 .0001];         % elementos de la diagonal: (delta, delta_p, phi, phi_p, ei)       
 Q1 = diag(d1);
-R1 = 0.1; 
+R1 = .5; %0.1; 
 
 % Cálculo del controlador
 [Klqr, ~, ~] = dlqr(Aa, Ba, Q1, R1); 
@@ -256,14 +256,15 @@ Ki = -Klqr(5);      % Ganancia para el integrador
 
 % CÁLCULO LQR2 - Trayectoria de 10 a 0
 % Definición de matrices Q y R.
-d2 = [1 0.2 10 0.002 0.00001];            % elementos de la diagonal: (delta, delta_p, phi, phi_p, ei)       
+d2 = [10 50 90 .01 .0001];         % elementos de la diagonal: (delta, delta_p, phi, phi_p, ei)       
 Q2 = diag(d2);
-R2 = 0.01; 
+R2 = .5; %0.01; 
 
 % Cálculo del controlador
 [Klqr_, ~, ~] = dlqr(Aa_, Ba_, Q2, R2); 
 K_  = Klqr_(1:4);     % Ganancia para los estados originales
 Ki_ = -Klqr_(5);      % Ganancia para el integrador
+
 
 %%
 % PASO VII: DISEÑO DEL OBSERVADOR.
@@ -349,7 +350,7 @@ phi_pp(1) = 0;
 x   = [d(1) d_p(1) phi(1) phi_p(1)]';     % estado
 xop = [0 0 pi 0]';                        % pto de operación
 
-h = Ts/20;
+h = Ts/Tsim;
 u = [];                                   % vector acc de control (auxiliar)
 
 ref   = 10;                               % posición de referencia inicial
@@ -372,7 +373,7 @@ t = 0:h:Tsim;
 %-------------------------------------------------------------------------%
 K_c  = K;
 Ki_c = Ki;
-Ko_c = Ko;
+%Ko_c = Ko;
 m_c  = m;
 A    = Ad;
 B    = Bd;
@@ -418,7 +419,7 @@ for ki=1:p_max
                 flag = 1;
                 K_c  = K_;
                 Ki_c = Ki_;
-                Ko_c = Ko_;
+                %Ko_c = Ko_;
                 A    = Ad_;
                 B    = Bd_;
             end

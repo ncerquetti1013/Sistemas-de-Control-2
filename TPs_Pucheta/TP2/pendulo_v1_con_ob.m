@@ -24,7 +24,7 @@
 %   es el máximo valor admisible de ésa no linealidad.
 
 %%
-close all; clear all; clc;
+clear all; clc; %close all;
 
 %%
 % PASO I: DEFINICIÓN DEL MODELO DE ESTADOS PARA EL SISTEMA CONTINUO.
@@ -245,9 +245,9 @@ Ba_ = [Bd_; -Cd_(1,:)*Bd_];
 
 % CÁLCULO LQR1 - Trayectoria de 0 a 10 m
 % Definición de matrices Q y R.
-d1 = [0.1 0.2 200 0.02 0.00001];          % elementos de la diagonal: (delta, delta_p, phi, phi_p, ei)       
+d1 = [1 50 500 .1 .0003]; %[0.1 0.2 200 0.02 0.00001];          % elementos de la diagonal: (delta, delta_p, phi, phi_p, ei)       
 Q1 = diag(d1);
-R1 = 0.1; 
+R1 = 1; %0.1; 
 
 % Cálculo del controlador
 [Klqr, ~, ~] = dlqr(Aa, Ba, Q1, R1); 
@@ -256,9 +256,9 @@ Ki = -Klqr(5);      % Ganancia para el integrador
 
 % CÁLCULO LQR2 - Trayectoria de 10 a 0
 % Definición de matrices Q y R.
-d2 = [1 0.2 10 0.002 0.00001];            % elementos de la diagonal: (delta, delta_p, phi, phi_p, ei)       
+d2 = [10 50 90 .01 .00045]; %[1 0.2 10 0.002 0.00001];            % elementos de la diagonal: (delta, delta_p, phi, phi_p, ei)       
 Q2 = diag(d2);
-R2 = 0.01; 
+R2 = .1; %0.01; 
 
 % Cálculo del controlador
 [Klqr_, ~, ~] = dlqr(Aa_, Ba_, Q2, R2); 
@@ -301,9 +301,9 @@ Co_ = Bd_';
 % Definición de las matrices Qo y Ro
 
 % PARA m
-do = [0.05 0.05 0.05 0.05]; %[1, 0.1, 1, 0.1]; 
+do = 100*[1 50 500 .1]; %[1, 0.1, 1, 0.1]; 
 Qo = diag(do); 
-Ro = diag([1 1]); %[0.001 0.001]
+Ro = diag([.01 .01]); %[0.001 0.001]
    
 % Cálculo del controlador del sistema dual (m)
 Ko = (dlqr(Ao,Bo,Qo,Ro))';
@@ -313,12 +313,12 @@ Ko = (dlqr(Ao,Bo,Qo,Ro))';
 % principio debieran ser las mismas dado que no hay información que
 % implique que la precisión con las que se conocen los estados ni la
 % incertidumbre de las mediciones de la salida cambie.
-do_ = [0.05 0.05 0.05 0.05]; %[1, 0.01, 1, 0.01]
+do_ = 100*[10 50 90 .1]; %[1, 0.01, 1, 0.01]
 Qo_ = diag(do_); 
-Ro_ = diag([1 1]); %[0.001 0.001]
+Ro_ = diag([.001 .001]); %[0.001 0.001]
    
 % Cálculo del controlador del sistema dual (m_)
-Ko_ = (dlqr(Ao_,Bo_,Qo_,Ro_))';
+Ko_ = (dlqr(Ao_,Bo_,Qo,Ro))';
    
 %----------------------------------------|   
 % REVISAR Y AJUSTAR VALORES DE OBSERVADOR|
@@ -329,7 +329,7 @@ Ko_ = (dlqr(Ao_,Bo_,Qo_,Ro_))';
 %-------------------------------------------------------------------------%
 %------------------------- Definición de tiempos -------------------------%
 %-------------------------------------------------------------------------%
-dT    = 1e-4;            % tiempo de integración de Euler
+%dT    = 1e-4;            % tiempo de integración de Euler
 Tsim  = 20;              % tiempo de simulación
 p_max = floor(Tsim/Ts);  % cantidad de puntos a simular.
 
@@ -366,6 +366,7 @@ deathZone = 0.5;
 %------------------------ Definición de vectores -------------------------%
 %-------------------------------------------------------------------------%
 t = 0:h:Tsim;
+refAng = phiIn*ones(size(t));
 
 %%
 %-------------------------------------------------------------------------%
@@ -390,8 +391,8 @@ for ki=1:p_max
     ei(ki+1)= ei(ki)+ref-y_out(1);
     
     %Ley de control
-    %u1(ki) = -K_c*(x - xop) + Ki_c*ei(ki+1);          % sin observador
-    u1(ki)  = -K_c*(x_hat - xop) + Ki_c*ei(ki+1);     % con observador
+    u1(ki) = -K_c*(x - xop) + Ki_c*ei(ki+1);          % sin observador
+    %u1(ki)  = -K_c*(x_hat - xop) + Ki_c*ei(ki+1);     % con observador
     
     % Zona Muerta
     if(abs(u1(ki)) < deathZone)
@@ -399,6 +400,9 @@ for ki=1:p_max
     else
         u1(ki) = sign(u1(ki))*(abs(u1(ki)) - deathZone);
     end
+    
+    % Saturación acción de control
+    %u1(ki)=min(10,max(-10,u1(ki)));
     %-----------------------------------------------------
     
     % Integraciones de Euler por paso de simulación
@@ -451,7 +455,7 @@ u(i) = u1(ki);
 %-------------------------------------------------------------------------%
 %------------------------------- Gráficas --------------------------------%
 %-------------------------------------------------------------------------%
-color = 'b';
+color = 'g';
 
 figure(1);
 subplot(3,2,1); grid on; hold on;
@@ -459,6 +463,7 @@ plot(t,phi_p,color,'LineWidth',1.5);grid on; title('Velocidad angular \phi_p');
 
 subplot(3,2,2); grid on; hold on;
 plot(t,phi,color,'LineWidth',1.5); title('Ángulo \phi');xlabel('Tiempo');
+plot(t,refAng,'red','LineWidth',1.5);
 
 subplot(3,2,3); grid on; hold on;
 plot(t,d,color,'LineWidth',1.5);title('Posición grúa \delta');xlabel('Tiempo');
