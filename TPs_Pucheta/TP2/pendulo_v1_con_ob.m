@@ -1,36 +1,36 @@
 % Sistemas de Control II -FCEFyN-UNC 
 % Profesor: Dr.Ing. Pucheta, Julian
 % Alumno: Cerquetti, Narella
-% Tp N∞ 2 - Caso de estudio 3 -
+% Tp N¬∞ 2 - Caso de estudio 3 -
 
-%   Calcular sistema controlador que haga evolucionar al pÈndulo en el equilibrio 
+%   Calcular sistema controlador que haga evolucionar al p√©ndulo en el equilibrio 
 %   estable.
 
 %   Objetivo de control
-%   Partiendo de una condiciÛn inicial nula en el desplazamiento y el ·ngulo 
+%   Partiendo de una condici√≥n inicial nula en el desplazamiento y el √°ngulo 
 %   en pi, hacer que el carro se desplace a 10 metros evitando las oscilaciones 
-%   de la masa m, considerando que es una gr˙a. Una vez que delta=10 modificar 
+%   de la masa m, considerando que es una gr√∫a. Una vez que delta=10 modificar 
 %   a m a un valor 10 veces mayor y volver al origen evitando oscilaciones.
 
 %   Item 3 - Inciso 1
-%   Objetivo: Considerar que sÛlo puede medirse el desplazamiento y el ·ngulo.
+%   Objetivo: Considerar que s√≥lo puede medirse el desplazamiento y el √°ngulo.
 %
 %   Item 3 - Inciso 2
 %   Objetivo: Especificar el rango posible para el tiempo de muestreo para 
 %   implementar el sistema en un microcontrolador.
 %
 %   Item 3 - Inciso 3
-%   Objetivo: Determinar el efecto de la nolinealidad en la acciÛn de control, descripta en la Fig. 4, y verificar cu·l
-%   es el m·ximo valor admisible de Èsa no linealidad.
+%   Objetivo: Determinar el efecto de la nolinealidad en la acci√≥n de control, descripta en la Fig. 4, y verificar cu√°l
+%   es el m√°ximo valor admisible de √©sa no linealidad.
 
 %%
 clear all; clc; %close all;
 
 %%
-% PASO I: DEFINICI”N DEL MODELO DE ESTADOS PARA EL SISTEMA CONTINUO.
+% PASO I: DEFINICI√ìN DEL MODELO DE ESTADOS PARA EL SISTEMA CONTINUO.
 
 %-------------------------------------------------------------------------%
-%------------------------ Par·metros del pÈndulo -------------------------%
+%------------------------ Par√°metros del p√©ndulo -------------------------%
 %-------------------------------------------------------------------------%
 
 m  = 0.1;
@@ -45,7 +45,7 @@ M  = 1.5;
 %-------------------------------------------------------------------------%
 
 % Variables de estado
-% x1 = (delta - desp), x2 = delta_p, x3 = (phi - ·ng), x4 = phi_p
+% x1 = (delta - desp), x2 = delta_p, x3 = (phi - √°ng), x4 = phi_p
 % Salidas
 % y1 = delta, y2 = phi
 % Entradas
@@ -71,7 +71,7 @@ Bc = [   0   ;
          0   ;
       1/(l*M)]; 
   
-% Matriz de salida - desplazamiento y ·ngulo
+% Matriz de salida - desplazamiento y √°ngulo
 % y1 = wr
 % y2 = theta
 % Se toman estas salidas ya que son las variables de estado que se pueden 
@@ -79,7 +79,7 @@ Bc = [   0   ;
 Cc = [1 0 0 0;
       0 0 1 0];  
   
-% Matriz de transmisiÛn directa.  
+% Matriz de transmisi√≥n directa.  
 Dc = [0; 
       0];            
   
@@ -89,28 +89,28 @@ Dc = [0;
 sysCont  = ss(Ac,Bc,Cc,Dc);         % m
 sysCont_ = ss(Ac_,Bc,Cc,Dc);        % m_
 %%
-% PASO II: CONVERSI”N A TIEMPO DISCRETO.
+% PASO II: CONVERSI√ìN A TIEMPO DISCRETO.
 
 %-------------------------------------------------------------------------%
-%------------------- C·lculo de din·micas del sistema --------------------%
+%------------------- C√°lculo de din√°micas del sistema --------------------%
 %-------------------------------------------------------------------------%
 val = real(eig(Ac));
 
-% Din·mica r·pida
+% Din√°mica r√°pida
 tR   = log(0.95)/val(2); 
-tInt = tR/4;            % tiempo de integraciÛn m·ximo 
+tInt = tR/4;            % tiempo de integraci√≥n m√°ximo 
 
-% Din·mica lenta
+% Din√°mica lenta
 tL   = log(0.05)/val(3); 
-tsim = tL*5;            % tiempo de simulaciÛn mÌnimo
+tsim = tL*5;            % tiempo de simulaci√≥n m√≠nimo
 
 %-------------------------------------------------------------------------%
-%------------------- DefiniciÛn de tiempo de muestreo --------------------%
+%------------------- Definici√≥n de tiempo de muestreo --------------------%
 %-------------------------------------------------------------------------%
 Ts      = 1e-2;         % Tiempo de muestreo
 
 %-------------------------------------------------------------------------%
-%--------------------- ObtenciÛn del sistema discreto --------------------%
+%--------------------- Obtenci√≥n del sistema discreto --------------------%
 %-------------------------------------------------------------------------%
 sysDisc = c2d(sysCont, Ts, 'zoh');
 Ad     = sysDisc.a;     % matriz de estados
@@ -125,10 +125,10 @@ Cd_     = sysDisc_.c;     % matriz de salida
 Dd_     = sysDisc_.d;     % matriz de acoplamiento directo
 
 %%
-% PASO III: AN¡LISIS DE ALCANZABILIDAD Y CONTROLABILIDAD.
+% PASO III: AN√ÅLISIS DE ALCANZABILIDAD Y CONTROLABILIDAD.
 
 %-------------------------------------------------------------------------%
-%------- VerificaciÛn de controlabilidad y alcanzabilidad del SD ---------%
+%------- Verificaci√≥n de controlabilidad y alcanzabilidad del SD ---------%
 %-------------------------------------------------------------------------%
 
 % PARA m
@@ -162,7 +162,7 @@ else
 end
 
 %%
-% PASO IV: DEFINICI”N DE LA LEY DE CONTROL QUE SE DESEA APLICAR.
+% PASO IV: DEFINICI√ìN DE LA LEY DE CONTROL QUE SE DESEA APLICAR.
 
 %-------------------------------------------------------------------------%
 %--------------------- Ley de control con integrador ---------------------%
@@ -175,12 +175,12 @@ end
 %  -------------------
 
 %%
-% PASO V: DEFINICI”N DEL SISTEMA AMPLIADO.
+% PASO V: DEFINICI√ìN DEL SISTEMA AMPLIADO.
 
 %-------------------------------------------------------------------------%
 %--------------------------- Sistema ampliado ----------------------------%
 %-------------------------------------------------------------------------%
-% Para el sistema ampliado se toma la parte de la matriz Cd de interÈs, es
+% Para el sistema ampliado se toma la parte de la matriz Cd de inter√©s, es
 % decir la que se va a comparar con la referencia. como en este caso la
 % referencia es el desplazaminiento, se toma la primera fila de Cd
 Aa = [Ad , zeros(4,1) ; -Cd(1,:)*Ad, eye(1)];
@@ -190,7 +190,7 @@ Aa_ = [Ad_ , zeros(4,1) ; -Cd_(1,:)*Ad_, eye(1)];
 Ba_ = [Bd_; -Cd_(1,:)*Bd_];
 
 %-------------------------------------------------------------------------%
-%------- VerificaciÛn de controlabilidad y alcanzabilidad del SDa --------%
+%------- Verificaci√≥n de controlabilidad y alcanzabilidad del SDa --------%
 %-------------------------------------------------------------------------%
 % PARA m
 %Maa = [Ba Aa*Ba Aa^2*Ba Aa^3*Ba Aa^4*Ba Aa^5*Ba]; 
@@ -213,20 +213,20 @@ Ba_ = [Bd_; -Cd_(1,:)*Bd_];
 %end
 
 %%
-% PASO VI: IMPLEMENTACI”N LQR.
+% PASO VI: IMPLEMENTACI√ìN LQR.
 
 %-------------------------------------------------------------------------%
-%------------------- DeterminaciÛn de matrices Q y R ---------------------%
+%------------------- Determinaci√≥n de matrices Q y R ---------------------%
 %-------------------------------------------------------------------------%
 
-% CONSIDERACIONES PARA LA DEFINICI”N DE LAS MATRICES Q Y R.
+% CONSIDERACIONES PARA LA DEFINICI√ìN DE LAS MATRICES Q Y R.
 % 1) Impacto matriz Q.
 %       Penaliza los estados del sistema; aumentar los elementos de la
-%       diagonal que se corresponden a estados especÌficos hace que el
+%       diagonal que se corresponden a estados espec√≠ficos hace que el
 %       controlador trate de mantenerlos cerca de 0.
 % 2) Impacto matriz R.
 %       Penaliza las entradas de control; aumentar los valores de los
-%       elementos de R hace que el controlador use menos energÌa de
+%       elementos de R hace que el controlador use menos energ√≠a de
 %       control.
 
 % PAUTAS RECOMENDADAS.
@@ -234,40 +234,40 @@ Ba_ = [Bd_; -Cd_(1,:)*Bd_];
 % 2) Calcular el controlador y simular el sistema a LC.
 % 3) Evaluar aspectos de importancia del proceso simulado:
 %       - Velocidad de la respuesta.
-%       - Amplidud m·xima de la acciÛn de control.
+%       - Amplidud m√°xima de la acci√≥n de control.
 %       - Oscilaciones.
-% 4) Ajustar Q y R en base a los resultados de simulaciÛn:
-%       - Respuesta lenta --> Aumentar valores de Q para penalizar m·s los
+% 4) Ajustar Q y R en base a los resultados de simulaci√≥n:
+%       - Respuesta lenta --> Aumentar valores de Q para penalizar m√°s los
 %       estados.
-%       - AcciÛn de control muy grande --> Aumentar valores de R para
-%       penalizar m·s la magnitud de la acciÛn de control.
+%       - Acci√≥n de control muy grande --> Aumentar valores de R para
+%       penalizar m√°s la magnitud de la acci√≥n de control.
 % 5) Repetir procedimiento hasta obtener respuesat deseada.
 
-% C¡LCULO LQR1 - Trayectoria de 0 a 10 m
-% DefiniciÛn de matrices Q y R.
+% C√ÅLCULO LQR1 - Trayectoria de 0 a 10 m
+% Definici√≥n de matrices Q y R.
 d1 = [1 50 500 .1 .0003]; %[0.1 0.2 200 0.02 0.00001];          % elementos de la diagonal: (delta, delta_p, phi, phi_p, ei)       
 Q1 = diag(d1);
 R1 = 1; %0.1; 
 
-% C·lculo del controlador
+% C√°lculo del controlador
 [Klqr, ~, ~] = dlqr(Aa, Ba, Q1, R1); 
 K  = Klqr(1:4);     % Ganancia para los estados originales
 Ki = -Klqr(5);      % Ganancia para el integrador
 
-% C¡LCULO LQR2 - Trayectoria de 10 a 0
-% DefiniciÛn de matrices Q y R.
+% C√ÅLCULO LQR2 - Trayectoria de 10 a 0
+% Definici√≥n de matrices Q y R.
 d2 = [10 50 90 .01 .00045]; %[1 0.2 10 0.002 0.00001];            % elementos de la diagonal: (delta, delta_p, phi, phi_p, ei)       
 Q2 = diag(d2);
 R2 = .1; %0.01; 
 
-% C·lculo del controlador
+% C√°lculo del controlador
 [Klqr_, ~, ~] = dlqr(Aa_, Ba_, Q2, R2); 
 K_  = Klqr_(1:4);     % Ganancia para los estados originales
 Ki_ = -Klqr_(5);      % Ganancia para el integrador
 
 
 %%
-% PASO VII: DISE—O DEL OBSERVADOR.
+% PASO VII: DISE√ëO DEL OBSERVADOR.
 
 %-------------------------------------------------------------------------%
 %---------------------------- Sistema dual -------------------------------%
@@ -283,62 +283,62 @@ Bo_ = Cd_';
 Co_ = Bd_';
 
 %-------------------------------------------------------------------------%
-%------------------ DeterminaciÛn de matrices Qo y Ro --------------------%
+%------------------ Determinaci√≥n de matrices Qo y Ro --------------------%
 %-------------------------------------------------------------------------%
 
-% CONSIDERACIONES PARA LA DEFINICI”N DE LAS MATRICES Qo Y Ro.
+% CONSIDERACIONES PARA LA DEFINICI√ìN DE LAS MATRICES Qo Y Ro.
 % 1) Matriz Qo.
 %       Matriz de covarianza del ruido del proceso. Representa la 
 %       incertidumbre en el modelo del sistema. Si los estados son conocidos 
-%       con precisiÛn, los valores en Qo deben ser pequeÒos. Si hay 
+%       con precisi√≥n, los valores en Qo deben ser peque√±os. Si hay 
 %       incertidumbre en los estados, los valores deben ser mayores.
 % 2) Matriz Ro.
-%       Matriz de covarianza del ruido de la mediciÛn. Representa la 
+%       Matriz de covarianza del ruido de la medici√≥n. Representa la 
 %       incertidumbre en las mediciones de salida. Si las mediciones son 
-%       precisas, los valores en Ro deben ser pequeÒos. Si las mediciones 
+%       precisas, los valores en Ro deben ser peque√±os. Si las mediciones 
 %       tienen ruido significativo, los valores deben ser mayores.
 
-% DefiniciÛn de las matrices Qo y Ro
+% Definici√≥n de las matrices Qo y Ro
 
 % PARA m
 do = 100*[1 50 500 .1]; %[1, 0.1, 1, 0.1]; 
 Qo = diag(do); 
 Ro = diag([.01 .01]); %[0.001 0.001]
    
-% C·lculo del controlador del sistema dual (m)
+% C√°lculo del controlador del sistema dual (m)
 Ko = (dlqr(Ao,Bo,Qo,Ro))';
 
 % PARA m_
 % Las ponderaciones de Q y R para el sistema corespondiente a m_ en
-% principio debieran ser las mismas dado que no hay informaciÛn que
-% implique que la precisiÛn con las que se conocen los estados ni la
+% principio debieran ser las mismas dado que no hay informaci√≥n que
+% implique que la precisi√≥n con las que se conocen los estados ni la
 % incertidumbre de las mediciones de la salida cambie.
 do_ = 100*[10 50 90 .1]; %[1, 0.01, 1, 0.01]
 Qo_ = diag(do_); 
 Ro_ = diag([.001 .001]); %[0.001 0.001]
    
-% C·lculo del controlador del sistema dual (m_)
+% C√°lculo del controlador del sistema dual (m_)
 Ko_ = (dlqr(Ao_,Bo_,Qo,Ro))';
    
 %----------------------------------------|   
 % REVISAR Y AJUSTAR VALORES DE OBSERVADOR|
 %--------------- ------------------------|  
 %%
-% PASO VIII: VERIFICACI”N.
+% PASO VIII: VERIFICACI√ìN.
 
 %-------------------------------------------------------------------------%
-%------------------------- DefiniciÛn de tiempos -------------------------%
+%------------------------- Definici√≥n de tiempos -------------------------%
 %-------------------------------------------------------------------------%
-%dT    = 1e-4;            % tiempo de integraciÛn de Euler
-Tsim  = 20;              % tiempo de simulaciÛn
+%dT    = 1e-4;            % tiempo de integraci√≥n de Euler
+Tsim  = 20;              % tiempo de simulaci√≥n
 p_max = floor(Tsim/Ts);  % cantidad de puntos a simular.
 
 %-------------------------------------------------------------------------%
-%---------------------------- InicializaciÛn -----------------------------%
+%---------------------------- Inicializaci√≥n -----------------------------%
 %-------------------------------------------------------------------------%
 % Condiciones iniciales
-phiIn  = pi;            % ·ngulo inicial del pÈndulo
-posRef = 10;            % referencia de posiciÛn a donde se quiere desplazar el carro           
+phiIn  = pi;            % √°ngulo inicial del p√©ndulo
+posRef = 10;            % referencia de posici√≥n a donde se quiere desplazar el carro           
 
 % Cond iniciales VE
 d(1)     = 0;
@@ -348,31 +348,31 @@ phi_p(1) = 0;
 phi_pp(1) = 0;
 
 x   = [d(1) d_p(1) phi(1) phi_p(1)]';     % estado
-xop = [0 0 pi 0]';                        % pto de operaciÛn
+xop = [0 0 pi 0]';                        % pto de operaci√≥n
 
 h = Ts/20;
 u = [];                                   % vector acc de control (auxiliar)
 
-ref   = 10;                               % posiciÛn de referencia inicial
+ref   = 10;                               % posici√≥n de referencia inicial
 flag  = 0;
 
 ei(1) = 0;
 x_hat = [0 0 pi 0]';
 
-% DefiniciÛn de zona muerta
+% Definici√≥n de zona muerta
 deathZone = 0.5;
 
 %-------------------------------------------------------------------------%
-%------------------------ DefiniciÛn de vectores -------------------------%
+%------------------------ Definici√≥n de vectores -------------------------%
 %-------------------------------------------------------------------------%
 t = 0:h:Tsim;
 refAng = phiIn*ones(size(t));
 
 %%
 %-------------------------------------------------------------------------%
-%------------------------------ SimulaciÛn -------------------------------%
+%------------------------------ Simulaci√≥n -------------------------------%
 %-------------------------------------------------------------------------%
-% Se configuran los par·metros iniciales de simulaciÛn que se actualizaran
+% Se configuran los par√°metros iniciales de simulaci√≥n que se actualizaran
 % cuando cambie la trayectoria de desplazamiento del carro.
 K_c  = K;       % controlador K
 Ki_c = Ki;      % constante de error Ki
@@ -386,7 +386,7 @@ for ki=1:p_max
     
     % Salida de dos componentes
     y_out   = Cd*x;             % salida del sistema
-    y_out_o = Cd*(x_hat-xop);   % salida del observador
+    y_out_o = Cd*(x_hat+xop);   % salida del observador
    
     ei(ki+1)= ei(ki)+ref-y_out(1);
     
@@ -401,16 +401,16 @@ for ki=1:p_max
         u1(ki) = sign(u1(ki))*(abs(u1(ki)) - deathZone);
     end
     
-    % SaturaciÛn acciÛn de control
+    % Saturaci√≥n acci√≥n de control
     %u1(ki)=min(10,max(-10,u1(ki)));
     %-----------------------------------------------------
     
-    % Integraciones de Euler por paso de simulaciÛn
+    % Integraciones de Euler por paso de simulaci√≥n
     for kii=1:Ts/h
         
         u(i) = u1(ki);
         
-        % C·lculo por sistema no lineal
+        % C√°lculo por sistema no lineal
         d_pp       = (1/(M+m_c))*(u(i) - m_c*l*phi_pp*cos(phi(i)) + m_c*l*phi_p(i)^2*sin(phi(i)) - F*d_p(i));
         phi_pp     = (1/l)*(g*sin(phi(i)) - d_pp*cos(phi(i)));
         d_p(i+1)   = d_p(i) + h*d_pp;
@@ -420,7 +420,7 @@ for ki=1:p_max
         
         % Cambia de sistema una vez que alcanza los 10[m]
         % Se tiene que actualizar:
-        % - la referencia de posiciÛn
+        % - la referencia de posici√≥n
         % - la masa transportada
         % - el controlador K
         % - la constante de error Ki
@@ -442,7 +442,7 @@ for ki=1:p_max
         i=i+1;
     end
     
-    % ActualizaciÛn de los estados
+    % Actualizaci√≥n de los estados
     % Estados del sistema
     x     = [d(i-1) d_p(i-1) phi(i-1) phi_p(i-1)]';   
     % Estados estimados por el observador
@@ -453,7 +453,7 @@ u(i) = u1(ki);
 
 %%
 %-------------------------------------------------------------------------%
-%------------------------------- Gr·ficas --------------------------------%
+%------------------------------- Gr√°ficas --------------------------------%
 %-------------------------------------------------------------------------%
 color = 'g';
 
@@ -462,23 +462,23 @@ subplot(3,2,1); grid on; hold on;
 plot(t,phi_p,color,'LineWidth',1.5);grid on; title('Velocidad angular \phi_p');
 
 subplot(3,2,2); grid on; hold on;
-plot(t,phi,color,'LineWidth',1.5); title('¡ngulo \phi');xlabel('Tiempo');
+plot(t,phi,color,'LineWidth',1.5); title('√Ångulo \phi');xlabel('Tiempo');
 plot(t,refAng,'red','LineWidth',1.5);
 
 subplot(3,2,3); grid on; hold on;
-plot(t,d,color,'LineWidth',1.5);title('PosiciÛn gr˙a \delta');xlabel('Tiempo');
+plot(t,d,color,'LineWidth',1.5);title('Posici√≥n gr√∫a \delta');xlabel('Tiempo');
 
 subplot(3,2,4); grid on; hold on;
-plot(t,d_p,color,'LineWidth',1.5);title('Velocidad de gr˙a \delta_p');
+plot(t,d_p,color,'LineWidth',1.5);title('Velocidad de gr√∫a \delta_p');
 
 subplot(3,1,3); grid on; hold on;
-plot(t,u,color,'LineWidth',1.5);title('AcciÛn de control u');xlabel('Tiempo en Seg.');
+plot(t,u,color,'LineWidth',1.5);title('Acci√≥n de control u');xlabel('Tiempo en Seg.');
  
 figure(2);
 subplot(2,1,1);grid on; hold on;
 plot(phi,phi_p,color,'LineWidth',1.5);
-title('¡ngulo vs Velocidad angular');
-xlabel('¡ngulo');ylabel('Velocidad angular');
+title('√Ångulo vs Velocidad angular');
+xlabel('√Ångulo');ylabel('Velocidad angular');
  
 subplot(2,1,2);grid on; hold on;
 plot(d,d_p,color,'LineWidth',1.5);
