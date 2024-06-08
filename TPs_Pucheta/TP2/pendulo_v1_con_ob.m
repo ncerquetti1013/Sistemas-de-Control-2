@@ -386,13 +386,13 @@ for ki=1:p_max
     
     % Salida de dos componentes
     y_out   = Cd*x;             % salida del sistema
-    y_out_o = Cd*(x_hat-xop);   % salida del observador
+    y_out_o = Cd*(x_hat+xop);   % salida del observador
    
     ei(ki+1)= ei(ki)+ref-y_out(1);
     
     %Ley de control
-    u1(ki) = -K_c*(x - xop) + Ki_c*ei(ki+1);          % sin observador
-    %u1(ki)  = -K_c*(x_hat - xop) + Ki_c*ei(ki+1);     % con observador
+    %u1(ki) = -K_c*(x - xop) + Ki_c*ei(ki+1);          % sin observador
+    u1(ki)  = -K_c*(x_hat - xop) + Ki_c*ei(ki+1);     % con observador
     
     % Zona Muerta
     if(abs(u1(ki)) < deathZone)
