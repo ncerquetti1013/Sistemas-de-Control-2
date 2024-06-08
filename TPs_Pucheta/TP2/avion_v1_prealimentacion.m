@@ -109,36 +109,13 @@ end
 %--------------------- Ley de control con integrador ---------------------%
 %-------------------------------------------------------------------------%
 
-% Se define Ley de control con integrador a fin de anular el error en
-% estado estable del sistema para una referencia no nula.
+% Se define Ley de control con una prealimentación para la referencia
 %  ___________________ 
-% | u = -K*x + Ki*psi |
+% | u = -K*x + G*ref |
 %  -------------------
-
-%-------------------------------------------------------------------------%
-%--------------------------- Sistema ampliado ----------------------------%
-%-------------------------------------------------------------------------%
-% Aa =  A   0
-%      -C   0
-%
-% Ba = B
-%      0
-
-Aa = [Ac  zeros(4,1) ; -Cc(1,:) 0];
-Ba = [Bc; 0];
-
-%-------------------------------------------------------------------------%
-%------- Verificación de controlabilidad para el sistema ampliado --------%
-%-------------------------------------------------------------------------%
-Mca = [Ba Aa*Ba Aa^2*Ba Aa^3*Ba Aa^4*Ba]; 
-
-numVEa = numVE(1)+1;
-
-if(numVEa == rank(Mca))
-    fprintf('\nSistema ampliado controlable')
-else
-    fprintf('\nSistema ampliado NO controlable')
-end
+% Al implementar una prealimentación de referencia, el controlador se
+% diseña como un regulador a 0 y luego se añade la prealimentación a la
+% acción de control
 
 %%
 % PASO V: DEFINICIÓN DE POLOS DESEADOS A LAZO CERRADO.
@@ -151,11 +128,9 @@ end
 p1 = -15+15i;
 p2 = -15-15i;
 p3 = -0.5+0.5i;
-p4 = -0.5-0.5i;
-% Polo del integrador
-p5 = -1;     
+p4 = -0.5-0.5i;    
 
-poles = [p1 p2 p3 p4 p5];
+poles = [p1 p2 p3 p4];
 
 %%
 % PASO VI: IMPLEMENTACIÓN DEL CONTROLADOR.
@@ -165,41 +140,36 @@ poles = [p1 p2 p3 p4 p5];
 %-------------------------------------------------------------------------%
 
 % Transformación a FCC
-auto_val = eig(Aa);
+auto_val = eig(Ac);
 c_ai = poly(auto_val);
 
-Wa = [c_ai(5) c_ai(4) c_ai(3) c_ai(2)  1;
-      c_ai(4) c_ai(3) c_ai(2)    1     0;
-      c_ai(3) c_ai(2)    1       0     0;
-      c_ai(2)    1       0       0     0;
-      1          0       0       0     0];
+W = [c_ai(4) c_ai(3) c_ai(2)  1;
+     c_ai(3) c_ai(2)    1     0;
+     c_ai(2)    1       0     0;
+        1       0       0     0];
 
-T = Mca * Wa;
+T = Mc * W;
 
-A_controlable = inv(T)*Aa*T;
+A_controlable = inv(T)*Ac*T;
 
 alpha_i = poly(poles);
 
 K_fcc = fliplr([alpha_i(2:end) - c_ai(2:end)])*inv(T);
-
-Kcc = K_fcc(1:4);
-KIcc = K_fcc(end);
+G_fcc = -inv(Cc(1,:)*inv(Ac-Bc*K_fcc)*Bc);
 
 % Ackerman
-K_ack = acker(Aa, Ba, poles);
-%K_ack = acker(A, B, poles); % sin integrador
+K_ack = acker(Ac, Bc, poles);
+G_ack = -inv(Cc(1,:)*inv(Ac-Bc*K_ack)*Bc);
 
 % LQR
-q = [1 1000000 1 1 .1];
+q = [1 1000000 1 1];
 Q = diag(q);
 R = 1000000;
 
-Klqr   = lqr(Aa, Ba, Q, R);
-K_lqr  = Klqr(1:4);
-KI_lqr = -Klqr(5);
+Klqr   = lqr(Ac, Bc, Q, R);
+G_lqr  = -inv(Cc(1,:)*inv(Ac-Bc*Klqr)*Bc);
 
-
-eig(Aa - Ba*Klqr)
+eig(Ac - Bc*Klqr)
 %%
 % PASO VII: SIMULACIÓN.
 
@@ -218,8 +188,7 @@ steps = Tsim/dt; % pasos de simulación
 
 % Vectores
 t = 0:dt:(Tsim-dt);
-u(1)  = 0;        % acción de control efectiva
-uu(1) = 0;        % acción de control afectada por alinealidad
+u1(1)  = 0;        % acción de control efectiva
 
 % Punto de operación del sistema
 xop =[0 0 0 ref]';
@@ -243,20 +212,16 @@ for i=1:steps
    % Salida para el instante actual
    y_out = Cc*x;
    
-   % Error de control
-   psi_p = ref - y_out(1); %Cc(1,:)*x;
-   % Integral del error de control
-   psi(i+1) = psi(i) + psi_p*dt;
-   
+ 
    % Acción de control
-   u(i) = -K_lqr*x + KI_lqr*psi(i+1);              % LQR
-   %u(i) = -K_ack(1:4)*x + K_ack(5)*psi(i+1);       % Ackerman
-   %u(i) = -Kcc*x + KIcc*psi(i+1);
+   %u(i) = -K_fcc*x+G_fcc*ref;       % K por transformación canónica
+   %u(i) = -K_ack*x+G_ack*ref;      % K por Ackerman
+   u(i) = -Klqr*x+G_lqr*ref;       % K por lqr
    
    % SISTEMA LINEAL
    % Actualización de variables
    xp = Ac*x + Bc*u(i);      % ecuación de estados
-   x  = x + xp*dt;          % actualización de los estados para el tiempo siguiente
+   x  = x + xp*dt;           % actualización de los estados para el tiempo siguiente
    
    if(i+1<=steps)
        alpha(i+1) = x(1);
@@ -273,7 +238,7 @@ end
 %-------------------------------- Gráficas -------------------------------%
 %-------------------------------------------------------------------------%
 
-color = 'r';
+color = 'k';
 
 figure(1);
 
@@ -306,7 +271,3 @@ plot(t, u, color);
 title('Acción de control, u_t');
 ylabel('u_t [V]');
 xlabel('Tiempo [s]');
-
-
-
-
