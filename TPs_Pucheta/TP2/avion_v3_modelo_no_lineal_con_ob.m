@@ -37,7 +37,7 @@
 %   de la nolinealidad.
 
 %%
-clear all; clc; close all;
+clear all; clc; %close all;
 %%
 % PASO II: DEFINICIÓN DEL MODELO DE ESTADOS PARA EL SISTEMA CONTINUO.
 
@@ -56,8 +56,8 @@ w = 9;      % frecuencia natural
 alpha(1) = 0;
 phi(1)   = 0;
 phi_p(1) = 0;
-h(1)     = 500;
-%h(1)     = -500;
+%h(1)     = 500;
+h(1)     = -500;
 x = [alpha(1) phi(1) phi_p(1) h(1)]';
 
 % Matriz de estados
@@ -152,7 +152,7 @@ end
 %p2 = -15-15i;
 %p3 = -0.5+0.5i;
 %p4 = -0.5-0.5i;
-%p5 = -0.00001;         % integrador
+%p5 = -0.00001;   
 
 % Polos obtenidos del LQR
 p1 = -15.7714+18.1582i;
@@ -197,45 +197,73 @@ Kack = K_ack(1:4);
 KIack = -K_ack(end);
 
 % LQR
-q = [1 1000000 1 1 .1];
+q = [1000 10000000 1 1 .01];
 Q = diag(q);
-R = 1000000;
+R = 10000000/2;
 
 Klqr   = lqr(Aa, Ba, Q, R);
 K_lqr  = Klqr(1:4);
 KI_lqr = -Klqr(5);
 
-
 eig(Aa - Ba*Klqr)
+
 %%
-% PASO VII: SIMULACIÓN.
+% PASO VIII: DISEÑO DEL OBSERVADOR.
+
+%-------------------------------------------------------------------------%
+%---------------------------- Sistema dual -------------------------------%
+%-------------------------------------------------------------------------%
+Ao = Ac';
+Bo = Cc';       
+Co = Bc';
+
+%-------------------------------------------------------------------------%
+%------------------ Determinación de matrices Qo y Ro --------------------%
+%-------------------------------------------------------------------------%
+
+% Definición de las matrices Qo y Ro
+do = [1 100 1 100];
+Qo = 100*diag(do);
+Ro = diag([100000000 100000000]);
+
+% Observador
+Ko = dlqr(Ao, Bo, Qo, Ro)';
+%%
+% PASO VIII: SIMULACIÓN.
 
 %-------------------------------------------------------------------------%
 %---------------------------- Inicializaciones ---------------------------%
 %-------------------------------------------------------------------------%
 
 % Referencias
-ref = -100;
-%ref = 100;
+%ref = -100;
+ref = 100;
 
 % Tiempos
-Tsim  = 150;     % tiempo de simulación
+Tsim  = 150;      % tiempo de simulación
 dt    = 1e-4;    % tiempo de integración
 steps = Tsim/dt; % pasos de simulación
 
 % Vectores
 t = 0:dt:(Tsim-dt);
 u(1)  = 0;        % acción de control efectiva
-uu(1) = 0;        % acción de control afectada por alinealidad
 
 % Punto de operación del sistema
 xop =[0 0 0 ref]';
 
-% Integrador
-psi(1) = 0;
+% Estados observados
+x_obs = [0 0 0 h(1)]';
+%alpha_obs(1) = 0;
+%phi_obs(1) = 0;
+%phip_obs(1) = 0;
+%h_obs(1) = 0;
 
-% Salida
-%y_out(1) = [0; 0];
+% Integrador
+psi = 0;
+
+% Zona muerta
+deadZone = .1;
+
 
 %%
 %-------------------------------------------------------------------------%
@@ -243,36 +271,43 @@ psi(1) = 0;
 %-------------------------------------------------------------------------%
 
 for i=1:steps
-   
-   % Estados para el instante actual
-   x = [alpha(i); phi(i); phi_p(i); h(i)];
-   
-   % Salida para el instante actual
-   y_out = Cc*x;
-   
-   % Error de control
-   psi_p = ref - y_out(1); %Cc(1,:)*x;
-   % Integral del error de control
-   psi(i+1) = psi(i) + psi_p*dt;
-   
-   % Acción de control
-   %u(i) = -K_lqr*x + KI_lqr*psi(i+1);          % LQR
-   %u(i) = -Kack*x + KIack*psi(i+1);             % Ackerman
-   u(i) = -Kcc*x + KIcc*psi(i+1);               % FCC
-   
-   % SISTEMA LINEAL
-   % Actualización de variables
-   xp = Ac*x + Bc*u(i);      % ecuación de estados
-   x  = x + xp*dt;          % actualización de los estados para el tiempo siguiente
-   
-   if(i+1<=steps)
-       alpha(i+1) = x(1);
-       phi(i+1)   = x(2);
-       phi_p(i+1) = x(3);
-       h(i+1)     = x(4);    
-   end
-  
     
+    y_obs = Cc*(x_obs);
+    y_out = Cc*x;
+    
+    % Error de control
+    psi_p = ref - y_out(1); 
+    % Integral del error de control
+    psi = psi + psi_p*dt;
+    
+    % Acción de control
+    %u(i)= -Kcc*(x_obs)+KIcc*psi;     % Con observador
+    u(i) = -Kcc*x + KIcc*psi;        % Sin observador
+    
+    if abs(u(i))<deadZone
+        u(i)=0;
+    else
+        u(i)=sign(u(i))*(abs(u(i))-deadZone);
+    end
+    
+    % Sistema no lineal
+    if(i+1<=steps)
+        alpha_p = a*(phi(i) - alpha(i));
+        phi_pp  = -w^2*(phi(i) - alpha(i) -b*u(i));
+        h_p     = c*alpha(i);
+        alpha(i+1) = alpha(i) + dt*alpha_p;
+        phi_p(i+1) = phi_p(i) + dt*phi_pp;
+        phi(i+1)   = phi(i) + dt*phi_p(i);
+        h(i+1)     = h(i) + dt*h_p;  
+        
+        % actualizacuón de estados
+        x = [alpha(i+1) phi(i+1) phi_p(i+1) h(i+1)]';
+   end
+    
+    
+    x_obsp = Ac*(x_obs) + Bc*u(i) +  Ko*(y_out - y_obs);
+    x_obs = x_obs + dt*x_obsp;
+  
 end    
 
 %%

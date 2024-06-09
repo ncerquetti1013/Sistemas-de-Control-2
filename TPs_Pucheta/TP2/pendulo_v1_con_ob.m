@@ -401,9 +401,6 @@ for ki=1:p_max
         u1(ki) = sign(u1(ki))*(abs(u1(ki)) - deathZone);
     end
     
-    % Saturación acción de control
-    %u1(ki)=min(10,max(-10,u1(ki)));
-    %-----------------------------------------------------
     
     % Integraciones de Euler por paso de simulación
     for kii=1:Ts/h
